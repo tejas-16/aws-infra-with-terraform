@@ -19,10 +19,6 @@ on:
         description: "EC2 Instance Name"
         required: true
         default: 'my-instance'
-      key_name:
-        description: "Key pair name (optional)"
-        required: false
-        default: ''
 
 jobs:
   deploy:
