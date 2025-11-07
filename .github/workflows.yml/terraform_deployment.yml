@@ -1,0 +1,67 @@
+name: Terraform AWS Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: "AWS Region"
+        required: true
+        default: 'us-east-1'
+      vpc_name:
+        description: "VPC Name"
+        required: true
+        default: 'my-vpc'
+      subnet_name:
+        description: "Subnet Name"
+        required: true
+        default: 'my-subnet'
+      instance_name:
+        description: "EC2 Instance Name"
+        required: true
+        default: 'my-instance'
+      key_name:
+        description: "Key pair name (optional)"
+        required: false
+        default: ''
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ github.event.inputs.aws_region }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="aws_region=${{ github.event.inputs.aws_region }}" \
+            -var="vpc_name=${{ github.event.inputs.vpc_name }}" \
+            -var="subnet_name=${{ github.event.inputs.subnet_name }}" \
+            -var="instance_name=${{ github.event.inputs.instance_name }}" \
+            -var="key_name=${{ github.event.inputs.key_name }}"
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve \
+            -var="aws_region=${{ github.event.inputs.aws_region }}" \
+            -var="vpc_name=${{ github.event.inputs.vpc_name }}" \
+            -var="subnet_name=${{ github.event.inputs.subnet_name }}" \
+            -var="instance_name=${{ github.event.inputs.instance_name }}" \
+            -var="key_name=${{ github.event.inputs.key_name }}"
