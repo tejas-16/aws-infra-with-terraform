@@ -19,6 +19,9 @@ on:
         description: "EC2 Instance Name"
         required: true
         default: 'my-instance'
+      bucket_name:
+        description: "Enter S3 bucket name for state"
+        required: true
 
 jobs:
   deploy:
