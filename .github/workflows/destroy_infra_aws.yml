@@ -4,11 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       aws_region:
-        description: "Enter AWS Region"
+        description: "AWS Region"
         required: true
+        default: 'us-east-1'
       bucket_name:
-        description: "Enter S3 bucket name used earlier"
+        description: "S3 bucket name for backend"
         required: true
+      vpc_name:
+        description: "VPC Name"
+        required: true
+      subnet_name:
+        description: "Subnet Name"
+        required: true
+      instance_name:
+        description: "EC2 Instance Name"
+        required: true
+      key_name:
+        description: "Key pair name (optional)"
+        required: false
+        default: ''
 
 jobs:
   destroy:
@@ -16,10 +30,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -38,19 +52,10 @@ jobs:
             -backend-config="encrypt=true"
 
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve
-
-      - name: Delete all objects inside the bucket
         run: |
-          aws s3 rm s3://${{ github.event.inputs.bucket_name }} --recursive || true
-
-      - name: Delete S3 bucket
-        run: |
-          aws s3api delete-bucket \
-            --bucket ${{ github.event.inputs.bucket_name }} \
-            --region ${{ github.event.inputs.aws_region }} || true
-
-      - name: Delete DynamoDB table
-        run: |
-          aws dynamodb delete-table \
-            --table-name tf-lock-${{ github.event.inputs.bucket_name }} || true
+          terraform destroy -auto-approve \
+            -var="aws_region=${{ github.event.inputs.aws_region }}" \
+            -var="vpc_name=${{ github.event.inputs.vpc_name }}" \
+            -var="subnet_name=${{ github.event.inputs.subnet_name }}" \
+            -var="instance_name=${{ github.event.inputs.instance_name }}" \
+            -var="key_name=${{ github.event.inputs.key_name }}"
