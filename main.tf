@@ -89,13 +89,6 @@ resource "aws_security_group" "instance_sg" {
   tags = { Name = "${var.vpc_name}-sg" }
 }
 
-# Optional key pair usage (must already exist in AWS)
-resource "aws_key_pair" "deployer" {
-  count      = var.key_name != "" ? 1 : 0
-  key_name   = var.key_name
-  public_key = file("~/.ssh/id_rsa.pub") # adjust or remove if not using
-}
-
 # EC2 Instance
 resource "aws_instance" "vm_instance" {
   ami                    = data.aws_ami.ubuntu.id
@@ -104,7 +97,7 @@ resource "aws_instance" "vm_instance" {
   vpc_security_group_ids = [aws_security_group.instance_sg.id]
   associate_public_ip_address = true
 
-  key_name = var.key_name != "" ? var.key_name : null
+  key_name = var.key_name
 
   tags = {
     Name = var.instance_name
